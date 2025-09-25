@@ -1,8 +1,8 @@
-# visio-to-xml (and more)
+# Visio-to-xml (and more)
 
-convert visio files to XML format for draw.io and mermaid diagrams, because I was tired of colleagues using web-based visio
+convert visio files to XML format for draw.io and mermaid diagrams, because I was tired of colleagues using web-based Visio (MS)
 
-## features
+## Features
 
 - parse visio (.vsdx) files and extract shapes, text, and connections
 - OCR processing of embedded images using mistral API
@@ -11,7 +11,7 @@ convert visio files to XML format for draw.io and mermaid diagrams, because I wa
 - command-line interface with batch processing
 - configurable output formats and processing options
 
-## installation
+## Installation
 
 this project uses uv for python package management. install dependencies:
 
@@ -40,7 +40,7 @@ edit `.env` and set your mistral API key:
 MISTRAL_API_KEY=your_mistral_api_key_here
 ```
 
-### configuration options
+### Configuration options
 
 - `MISTRAL_API_KEY`: required for OCR functionality
 - `MISTRAL_API_URL`: mistral API endpoint (default: https://api.mistral.ai/v1)
@@ -49,9 +49,9 @@ MISTRAL_API_KEY=your_mistral_api_key_here
 - `MAX_IMAGE_SIZE`: maximum image size for OCR processing (default: 1024)
 - `OCR_CONFIDENCE_THRESHOLD`: minimum confidence for OCR results (default: 0.8)
 
-## usage
+## Usage
 
-### command line
+### Command line
 
 convert a single visio file:
 
@@ -62,7 +62,10 @@ visio2xml convert diagram.vsdx
 # convert to mermaid format
 visio2xml convert diagram.vsdx --format mermaid
 
-# specify output file
+# convert to both formats simultaneously
+visio2xml convert diagram.vsdx --format both
+
+# specify output file (single format only)
 visio2xml convert diagram.vsdx --output my_diagram.drawio
 ```
 
@@ -83,6 +86,9 @@ visio2xml batch ./ --recursive
 
 # convert to mermaid format
 visio2xml batch ./ --format mermaid
+
+# convert to both formats
+visio2xml batch ./ --format both
 ```
 
 check system configuration:
@@ -91,7 +97,7 @@ check system configuration:
 visio2xml check
 ```
 
-### python API
+### Python API
 
 ```python
 from pathlib import Path
@@ -109,7 +115,7 @@ output_path = converter.convert_file(
 print(f"converted to: {output_path}")
 ```
 
-## directory structure
+## Directory structure
 
 ```
 visio-to-xml/
@@ -132,14 +138,13 @@ visio-to-xml/
 └── examples/               # example visio files
 ```
 
-## supported formats
+## Supported formats
 
-### input formats
+### Input formats
 
 - `.vsdx` - visio 2013+ files
-- `.vsd` - legacy visio files (limited support)
 
-### output formats
+### Output formats
 
 - **draw.io**: XML format for direct import into diagrams.net
 - **mermaid**: markdown-compatible diagram syntax
@@ -155,7 +160,7 @@ when a mistral API key is configured, the tool automatically:
 
 this helps preserve information from images that contain text or diagrams.
 
-## development
+## Development
 
 run tests:
 
@@ -176,13 +181,13 @@ type checking:
 uv run mypy visio_to_xml/
 ```
 
-## limitations
+## Limitations
 
 - visio files use complex internal formats; parsing may not capture all elements
 - OCR accuracy depends on image quality and mistral API availability
 - some advanced visio features (custom shapes, macros) are not supported
 - connection routing information may be simplified in output
 
-## license
+## Loicense
 
-MIT
+don't care

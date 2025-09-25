@@ -11,7 +11,7 @@ class DrawIOConverter:
     """converts visio pages to draw.io XML format."""
     
     def __init__(self):
-        self.shape_counter = 1
+        self.shape_counter = 2  # start at 2 since 0 and 1 are reserved
         self.page_counter = 0
     
     def convert_pages(self, pages: List[VisioPage]) -> str:

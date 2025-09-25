@@ -27,14 +27,14 @@ def cli() -> None:
 @click.argument('input_file', type=click.Path(exists=True, path_type=Path))
 @click.option(
     '--format', '-f',
-    type=click.Choice(['drawio', 'mermaid'], case_sensitive=False),
+    type=click.Choice(['drawio', 'mermaid', 'both'], case_sensitive=False),
     default='drawio',
-    help='output format (default: drawio)'
+    help='output format: drawio, mermaid, or both (default: drawio)'
 )
 @click.option(
     '--output', '-o',
     type=click.Path(path_type=Path),
-    help='output file path (auto-generated if not specified)'
+    help='output file path (auto-generated if not specified, ignored when format=both)'
 )
 @click.option(
     '--no-ocr',
@@ -60,24 +60,42 @@ def convert(
                 "[yellow]warning: OCR not available. set MISTRAL_API_KEY to enable image text extraction[/yellow]"
             )
         
-        # show progress
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console
-        ) as progress:
-            task = progress.add_task("converting visio file...", total=None)
+        # handle different format options
+        if format.lower() == 'both':
+            # convert to both formats efficiently (parse once)
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console
+            ) as progress:
+                task = progress.add_task("converting to both formats...", total=None)
+                
+                # convert to both formats in one go
+                drawio_output, mermaid_output = converter.convert_file_both_formats(input_file)
+                
+                progress.update(task, completed=1, total=1)
             
-            # perform conversion
-            output_path = converter.convert_file(
-                input_file,
-                output_format=format.lower(),
-                output_path=output
-            )
+            console.print(f"[green]✓[/green] draw.io output: {drawio_output}")
+            console.print(f"[green]✓[/green] mermaid output: {mermaid_output}")
+        else:
+            # single format conversion
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console
+            ) as progress:
+                task = progress.add_task("converting visio file...", total=None)
+                
+                # perform conversion
+                output_path = converter.convert_file(
+                    input_file,
+                    output_format=format.lower(),
+                    output_path=output
+                )
+                
+                progress.update(task, completed=1, total=1)
             
-            progress.update(task, completed=1, total=1)
-        
-        console.print(f"[green]✓[/green] conversion completed: {output_path}")
+            console.print(f"[green]✓[/green] conversion completed: {output_path}")
         
     except Exception as e:
         console.print(f"[red]error:[/red] {e}")
@@ -150,9 +168,9 @@ def check() -> None:
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.option(
     '--format', '-f',
-    type=click.Choice(['drawio', 'mermaid'], case_sensitive=False),
+    type=click.Choice(['drawio', 'mermaid', 'both'], case_sensitive=False),
     default='drawio',
-    help='output format (default: drawio)'
+    help='output format: drawio, mermaid, or both (default: drawio)'
 )
 @click.option(
     '--recursive', '-r',
@@ -190,12 +208,19 @@ def batch(directory: Path, format: str, recursive: bool) -> None:
                 task = progress.add_task(f"processing {visio_file.name}...", total=None)
                 
                 try:
-                    output_path = converter.convert_file(
-                        visio_file,
-                        output_format=format.lower()
-                    )
-                    progress.update(task, completed=1, total=1)
-                    console.print(f"[green]✓[/green] {visio_file.name} → {output_path.name}")
+                    if format.lower() == 'both':
+                        # convert to both formats efficiently
+                        drawio_output, mermaid_output = converter.convert_file_both_formats(visio_file)
+                        progress.update(task, completed=1, total=1)
+                        console.print(f"[green]✓[/green] {visio_file.name} → {drawio_output.name}, {mermaid_output.name}")
+                    else:
+                        # single format
+                        output_path = converter.convert_file(
+                            visio_file,
+                            output_format=format.lower()
+                        )
+                        progress.update(task, completed=1, total=1)
+                        console.print(f"[green]✓[/green] {visio_file.name} → {output_path.name}")
                     
                 except Exception as e:
                     console.print(f"[red]✗[/red] {visio_file.name}: {e}")

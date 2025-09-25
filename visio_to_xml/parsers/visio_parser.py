@@ -190,6 +190,12 @@ class VisioParser:
                 # try to extract image data
                 image_data = self._extract_image_data(vsdx_zip, foreign_data_elements[0])
             
+            # also check if this is marked as an image shape by type
+            if shape_type.lower() == 'foreign':
+                has_image = True
+                if not image_data and foreign_data_elements:
+                    image_data = self._extract_image_data(vsdx_zip, foreign_data_elements[0])
+            
             # determine if this is a connector shape
             if master == '2' or 'Connect' in shape_type:
                 shape_type = 'connector'
@@ -247,9 +253,16 @@ class VisioParser:
         """extract image data from foreign data element."""
         try:
             # look for Rel element with reference ID
-            rel_elem = foreign_data_elem.find('.//r:Rel', {'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'})
+            rel_namespaces = {
+                'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+            }
+            rel_elem = foreign_data_elem.find('.//r:Rel', rel_namespaces)
+            
             if rel_elem is not None:
-                rel_id = rel_elem.get('id', rel_elem.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'))
+                rel_id = rel_elem.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id')
+                if not rel_id:
+                    rel_id = rel_elem.get('id')
+                
                 if rel_id:
                     # try to find image in media folder with various naming
                     possible_paths = [
@@ -261,17 +274,33 @@ class VisioParser:
                     
                     for media_path in possible_paths:
                         try:
-                            return vsdx_zip.read(media_path)
+                            image_data = vsdx_zip.read(media_path)
+                            return image_data
                         except KeyError:
                             continue
+            else:
+                # try to find any image by brute force if relationships don't work
+                media_files = [name for name in vsdx_zip.namelist() if name.startswith('visio/media/image') and name.endswith('.png')]
+                if media_files:
+                    # for now, just try the first available image as a fallback
+                    try:
+                        image_path = media_files[0]  # use first available image
+                        image_data = vsdx_zip.read(image_path)
+                        return image_data
+                    except Exception:
+                        pass
             
             # try to extract embedded data
-            if foreign_data_elem.text:
+            if foreign_data_elem.text and foreign_data_elem.text.strip():
                 import base64
-                return base64.b64decode(foreign_data_elem.text.strip())
+                try:
+                    decoded_data = base64.b64decode(foreign_data_elem.text.strip())
+                    return decoded_data
+                except Exception:
+                    pass
                 
-        except Exception as e:
-            print(f"warning: failed to extract image data: {e}")
+        except Exception:
+            pass
             
         return None
     

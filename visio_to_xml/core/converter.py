@@ -79,6 +79,50 @@ class VisioConverter:
         print(f"conversion completed: {output_path}")
         return output_path
     
+    def convert_file_both_formats(self, input_path: Path) -> tuple[Path, Path]:
+        """convert a visio file to both draw.io and mermaid formats efficiently."""
+        
+        # validate input
+        if not input_path.exists():
+            raise FileNotFoundError(f"input file not found: {input_path}")
+        
+        if input_path.suffix.lower() not in ['.vsdx', '.vsd']:
+            raise ValueError(f"unsupported file format: {input_path.suffix}")
+        
+        # parse visio file once
+        print(f"parsing visio file: {input_path}")
+        parser = VisioParser(input_path)
+        pages = parser.parse()
+        
+        if not pages:
+            raise ValueError("no pages found in visio file")
+        
+        print(f"found {len(pages)} page(s)")
+        
+        # process images with OCR if available
+        if self.ocr_client:
+            print("processing images with OCR...")
+            self._process_images_with_ocr(pages)
+        
+        # determine output paths
+        output_name = input_path.stem
+        drawio_path = self.config.output_directory / f"{output_name}.drawio"
+        mermaid_path = self.config.output_directory / f"{output_name}.md"
+        
+        # convert to both formats
+        print("converting to draw.io format...")
+        drawio_converter = DrawIOConverter()
+        drawio_xml = drawio_converter.convert_pages(pages)
+        drawio_converter.save_to_file(drawio_xml, drawio_path)
+        
+        print("converting to mermaid format...")
+        mermaid_converter = MermaidConverter()
+        mermaid_content = mermaid_converter.convert_pages(pages)
+        mermaid_converter.save_to_file(mermaid_content, mermaid_path)
+        
+        print(f"conversion completed: {drawio_path}, {mermaid_path}")
+        return drawio_path, mermaid_path
+    
     def _process_images_with_ocr(self, pages: List[VisioPage]) -> None:
         """process images in pages using OCR to extract text."""
         total_images = sum(

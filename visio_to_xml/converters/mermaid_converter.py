@@ -103,7 +103,7 @@ class MermaidConverter:
         elif 'start' in shape_type or 'end' in shape_type or 'oval' in shape_type:
             return "()"  # rounded rectangle
         elif shape.has_image:
-            return "[[]]"  # sub-routine shape for images
+            return "[]"  # rectangle for images (mermaid doesn't support image shapes directly)
         else:
             return "[]"  # default rectangle
     
@@ -123,15 +123,20 @@ class MermaidConverter:
         if not text:
             return ""
         
-        # remove or escape problematic characters
-        text = text.replace('"', "'")
-        text = text.replace('\n', ' ')
-        text = text.replace('\r', ' ')
-        text = ' '.join(text.split())  # normalize whitespace
+        # remove or escape problematic characters for mermaid
+        text = text.replace('"', "'")  # replace quotes with single quotes
+        text = text.replace('[', '(')   # replace brackets that could break syntax
+        text = text.replace(']', ')')
+        text = text.replace('{', '(')   # replace braces
+        text = text.replace('}', ')')
+        text = text.replace('\n', ' ')  # replace newlines with spaces
+        text = text.replace('\r', ' ')  # replace carriage returns
+        text = text.replace('#', 'hash') # replace hash symbols
+        text = text.replace('&', 'and')  # replace ampersands
+        text = ' '.join(text.split())   # normalize whitespace
         
-        # limit length for readability
-        if len(text) > 50:
-            text = text[:47] + "..."
+        # don't truncate - keep full OCR content
+        # users can see the full extracted text which is valuable
         
         return text
     
