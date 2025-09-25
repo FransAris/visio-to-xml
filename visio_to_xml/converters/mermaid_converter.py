@@ -87,25 +87,23 @@ class MermaidConverter:
         if not text:
             text = f"Shape {node_id}"
         
-        # determine node shape based on type
-        node_shape = self._get_mermaid_node_shape(shape)
-        
-        return f"{node_id}{node_shape}[\"{text}\"]"
+        # format complete mermaid node with proper syntax
+        return self._format_mermaid_node(node_id, shape, text)
     
-    def _get_mermaid_node_shape(self, shape: VisioShape) -> str:
-        """get appropriate mermaid node shape syntax."""
+    def _format_mermaid_node(self, node_id: str, shape: VisioShape, text: str) -> str:
+        """format complete mermaid node with proper syntax."""
         shape_type = shape.shape_type.lower()
         
+        # Text is already cleaned by _clean_text_for_mermaid, just use it directly
+        # For safety, ensure no remaining problematic characters
+        safe_text = text.replace('"', "'").replace('\\', '/')
+        
         if 'decision' in shape_type or 'diamond' in shape_type:
-            return "{}"  # diamond shape
-        elif 'process' in shape_type or 'rectangle' in shape_type:
-            return "[]"  # rectangle
+            return f'{node_id}{{"{"}"}{safe_text}"{"}}"}'  # Diamond: node{text}
         elif 'start' in shape_type or 'end' in shape_type or 'oval' in shape_type:
-            return "()"  # rounded rectangle
-        elif shape.has_image:
-            return "[]"  # rectangle for images (mermaid doesn't support image shapes directly)
+            return f'{node_id}["{safe_text}"]'  # Use square brackets for consistency
         else:
-            return "[]"  # default rectangle
+            return f'{node_id}["{safe_text}"]'  # Rectangle: node["text"]
     
     def _convert_connection_to_edge(self, connection: Dict[str, Any], diagram_type: str) -> str:
         """convert a visio connection to mermaid edge."""
@@ -124,19 +122,24 @@ class MermaidConverter:
             return ""
         
         # remove or escape problematic characters for mermaid
-        text = text.replace('"', "'")  # replace quotes with single quotes
-        text = text.replace('[', '(')   # replace brackets that could break syntax
-        text = text.replace(']', ')')
-        text = text.replace('{', '(')   # replace braces
-        text = text.replace('}', ')')
-        text = text.replace('\n', ' ')  # replace newlines with spaces
-        text = text.replace('\r', ' ')  # replace carriage returns
+        text = text.replace('\\n', ' ')  # handle escaped newlines first
+        text = text.replace('\n', ' ')   # replace newlines with spaces
+        text = text.replace('\r', ' ')   # replace carriage returns
         text = text.replace('#', 'hash') # replace hash symbols
         text = text.replace('&', 'and')  # replace ampersands
-        text = ' '.join(text.split())   # normalize whitespace
+        text = text.replace('[', '(')    # replace brackets that could break syntax
+        text = text.replace(']', ')')
+        text = text.replace('{', '(')    # replace braces
+        text = text.replace('}', ')')
+        text = text.replace('<', 'lt')   # replace angle brackets
+        text = text.replace('>', 'gt')
+        text = text.replace('"', "'")    # replace double quotes with single quotes
+        text = text.replace('`', "'")    # replace backticks with single quotes
+        text = text.replace('|', '-')    # replace pipes with dashes
+        text = ' '.join(text.split())    # normalize whitespace
         
-        # don't truncate - keep full OCR content
-        # users can see the full extracted text which is valuable
+        # preserve full content - users want to see complete OCR text
+        # no truncation applied here
         
         return text
     
