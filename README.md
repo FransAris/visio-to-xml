@@ -1,6 +1,7 @@
 # Visio-to-xml (and more)
 
-convert visio files to XML format for draw.io and mermaid diagrams, because I was tired of colleagues using web-based Visio (MS)
+Convert visio files to XML format for draw.io and mermaid diagrams, because I was tired of colleagues using web-based Visio (MS). I am declaring holy war on OOXML and its 'Markup Compatibility Layer'. 
+Currently it works a bit crap, but for now I blame OOXML.
 
 ## Features
 
