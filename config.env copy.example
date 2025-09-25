@@ -1,0 +1,16 @@
+# mistral API configuration
+MISTRAL_API_KEY=your_mistral_api_key_here
+MISTRAL_API_URL=https://api.mistral.ai/v1
+
+# optional: custom OCR endpoints
+CUSTOM_OCR_ENDPOINT=
+CUSTOM_OCR_API_KEY=
+
+# output configuration
+DEFAULT_OUTPUT_FORMAT=drawio
+OUTPUT_DIRECTORY=output/
+
+# processing settings
+MAX_IMAGE_SIZE=1024
+OCR_CONFIDENCE_THRESHOLD=0.8
+ENABLE_DEBUG_LOGGING=false

@@ -1,0 +1,50 @@
+[project]
+name = "visio-to-xml"
+version = "0.1.0"
+description = "convert visio files to XML format for draw.io and mermaid"
+authors = [
+    {name = "fransaris", email = "your.email@example.com"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+dependencies = [
+    "python-pptx>=0.6.21",
+    "lxml>=4.9.0",
+    "pillow>=10.0.0",
+    "requests>=2.31.0",
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+visio2xml = "visio_to_xml.cli.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "I", "N", "W", "B", "C4", "SIM", "TCH"]
+ignore = ["E501"]
+
+[tool.black]
+line-length = 88
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
